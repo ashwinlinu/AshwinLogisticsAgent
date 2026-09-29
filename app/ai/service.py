@@ -1,22 +1,17 @@
-from app.ai.client import client
-from app.config.settings import settings
-
+from langchain_core.messages import HumanMessage
+from app.ai.graph import graph
 
 class AIService:
 
     async def generate_response(self, message: str) -> str:
-        response = await client.responses.create(
-            model=settings.azure_openai_deployment,
-            input=message
+
+        result = await graph.ainvoke(
+            {
+                "messages": [
+                    HumanMessage(content=message)
+                ]
+            }
         )
-
-        if response.status != "completed":
-            raise RuntimeError(
-                f"Azure OpenAI response was not completed: "
-                f"{response.status}"
-            )
-
-        return response.output_text
-
+        return result["messages"][-1].content
 
 ai_service = AIService()

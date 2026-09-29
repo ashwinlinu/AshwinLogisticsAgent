@@ -1,25 +1,23 @@
-from typing import TypedDict
-
-from langgraph.graph import END, START, StateGraph
+from langgraph.graph import MessagesState, START, END, StateGraph
 
 from app.ai.llm import llm
+from app.ai.prompts.agent import agent_prompt
 
 
-class AgentState(TypedDict):
-    message: str
-    response: str
+async def agent_node(state: MessagesState):
 
-
-async def agent_node(state: AgentState) -> AgentState:
-    response = await llm.ainvoke(state["message"])
+    messages = agent_prompt.invoke({
+        "messages": state["messages"]
+    })
+    
+    response = await llm.ainvoke(messages)
 
     return {
-        "message": state["message"],
-        "response": response.content,
+        "messages": [response]
     }
 
 
-builder = StateGraph(AgentState)
+builder = StateGraph(MessagesState)
 
 builder.add_node("agent", agent_node)
 
