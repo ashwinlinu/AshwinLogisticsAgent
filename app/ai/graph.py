@@ -1,27 +1,18 @@
-from langgraph.graph import MessagesState, START, END, StateGraph
+from langgraph.graph import StateGraph, MessagesState, START, END
 
-from app.ai.llm import llm
-from app.ai.prompts.agent import agent_prompt
-
-
-async def agent_node(state: MessagesState):
-
-    messages = agent_prompt.invoke({
-        "messages": state["messages"]
-    })
-    
-    response = await llm.ainvoke(messages)
-
-    return {
-        "messages": [response]
-    }
+from app.ai.nodes.rag import rag_node
 
 
-builder = StateGraph(MessagesState)
+def build_graph():
 
-builder.add_node("agent", agent_node)
+    graph = StateGraph(MessagesState)
 
-builder.add_edge(START, "agent")
-builder.add_edge("agent", END)
+    graph.add_node("rag", rag_node)
 
-graph = builder.compile()
+    graph.add_edge(START, "rag")
+    graph.add_edge("rag", END)
+
+    return graph.compile()
+
+
+graph = build_graph()
