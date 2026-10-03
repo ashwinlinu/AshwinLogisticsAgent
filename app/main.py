@@ -1,104 +1,88 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+import logging
+from uuid import uuid4
 
-from app.ai.service import ai_service
+from fastapi import FastAPI, HTTPException, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
+from app.api.models import ErrorResponse
+from app.api.routes import router
 from app.config.settings import settings
-from app.db.repositories.conversation_repository import conversation_repository, resolve_user_id
+from app.core.logging import configure_logging
 
+logger = logging.getLogger("app.main")
 
-class ChatRequest(BaseModel):
-    message: str
-    conversation_id: str | None = None
-    session_id: str | None = None
-    user_id: str | None = None
-
-
-class ChatResponse(BaseModel):
-    response: str
-    status: str = "ok"
-    conversation_id: str | None = None
-    session_id: str | None = None
-
-
-class ConversationListItem(BaseModel):
-    conversation_id: str
-    user_id: str | None = None
-    updated_at: str | None = None
-
+configure_logging()
 
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
 )
 
+app.include_router(router)
+
+
+@app.middleware("http")
+async def add_request_id(request: Request, call_next):
+    request_id = request.headers.get("X-Request-ID") or str(uuid4())
+    request.state.request_id = request_id
+    logger.info("Incoming request %s %s", request.method, request.url.path)
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
+    return response
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    request_id = getattr(request.state, "request_id", None)
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=ErrorResponse(
+            error="validation_error",
+            message="Request validation failed.",
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            request_id=request_id,
+        ).model_dump(),
+    )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    request_id = getattr(request.state, "request_id", None)
+    detail = exc.detail if isinstance(exc.detail, str) else "Request failed."
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=ErrorResponse(
+            error="http_error",
+            message=detail,
+            status_code=exc.status_code,
+            request_id=request_id,
+        ).model_dump(),
+    )
+
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    request_id = getattr(request.state, "request_id", None)
+    logger.exception("Unhandled exception for request_id=%s", request_id)
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content=ErrorResponse(
+            error="internal_server_error",
+            message="The assistant is temporarily unavailable. Please try again.",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            request_id=request_id,
+        ).model_dump(),
+    )
+
 
 @app.get("/health")
-async def health():
+async def health(request: Request):
+    request_id = getattr(request.state, "request_id", None)
+    logger.info("health check request_id=%s", request_id)
     return {
         "status": "ok",
         "application": settings.app_name,
         "version": settings.app_version,
-    }
-
-
-@app.post("/ai/chat")
-async def chat(request: ChatRequest):
-    try:
-        response, conversation_id = await ai_service.generate_response(
-            request.message,
-            conversation_id=request.conversation_id,
-            session_id=request.session_id,
-            user_id=request.user_id,
-        )
-        return ChatResponse(
-            response=response,
-            status="ok",
-            conversation_id=conversation_id,
-            session_id=request.session_id or conversation_id,
-        )
-    except Exception:
-        return ChatResponse(
-            response="The assistant is temporarily unavailable. Please try again.",
-            status="error",
-            conversation_id=request.conversation_id,
-            session_id=request.session_id,
-        )
-
-
-@app.get("/ai/conversations")
-async def list_conversations(user_id: str | None = None):
-    resolved_user_id = resolve_user_id(user_id)
-    conversations = await conversation_repository.list_user_conversations(resolved_user_id)
-    return {
-        "user_id": resolved_user_id,
-        "conversations": [
-            {
-                "conversation_id": item.conversation_id,
-                "session_id": item.session_id,
-                "user_id": item.user_id,
-                "updated_at": item.updated_at.isoformat() if item.updated_at else None,
-            }
-            for item in conversations
-        ],
-    }
-
-
-@app.get("/ai/conversations/{conversation_id}/history")
-async def get_conversation_history(conversation_id: str):
-    conversation = await conversation_repository.get_conversation(conversation_id)
-    if conversation is None:
-        return {"conversation_id": conversation_id, "messages": []}
-
-    return {
-        "conversation_id": conversation.conversation_id,
-        "session_id": conversation.session_id,
-        "user_id": conversation.user_id,
-        "messages": [
-            {
-                "role": message.role,
-                "content": message.content,
-                "timestamp": message.timestamp.isoformat(),
-            }
-            for message in conversation.messages
-        ],
+        "request_id": request_id,
     }

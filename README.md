@@ -110,5 +110,56 @@ This is a project foundation and architecture specification for an enterprise AI
 - Expanded logistics operations workflows
 - Better support ticket automation
 
+## Final Recommendations
+
+The project is now in a strong Phase 8 state, but these are the next production improvements I recommend:
+
+1. Add explicit session creation and session management APIs
+   - `POST /ai/sessions`
+   - `GET /ai/sessions/{session_id}`
+   - `GET /ai/sessions/{session_id}/history`
+
+2. Add auth and user identity handling
+   - Replace the hardcoded `ashwinlinu` user with a real identity provider or login layer.
+   - Store `user_id` and `session_id` in a secure session store.
+
+3. Add observability and tracing
+   - structured logs per request
+   - latency metrics
+   - error tracking / Sentry or equivalent
+   - correlation IDs across downstream tool calls
+
+4. Add database migrations and schema versioning
+   - conversation stores should be versioned
+   - ensure collection indexes are created for `user_id`, `conversation_id`, and `session_id`
+
+5. Add more end-to-end API tests with TestClient
+   - chat endpoints
+   - conversation history endpoints
+   - shipment lookup errors
+   - validation failures
+
+6. Add a light context summarization layer
+   - long conversations should be summarized to avoid context bloat.
+   - keep the latest shipment ID and key customer context in memory/state.
+
+7. Add permissions and safe actions
+   - human approval for write-like operations
+   - role-based access for operational actions
+   - audit trail for all support actions
+
+8. Add deployment and environment hardening
+   - separate dev/staging/prod config
+   - secret management
+   - health checks and readiness probes
+   - startup validation for Mongo/Qdrant/OpenAI connectivity
+
+## Recommended Next Milestones
+
+- Phase 9: Real user auth and session management
+- Phase 10: Conversation summarization and context retention
+- Phase 11: Operational write tools and approval workflows
+- Phase 12: Monitoring, deployment hardening, and production readiness review
+
 ## Summary
 The goal of this project is to reduce support handling time and improve customer response quality by building an AI support assistant that can reason across policy, operational data, and customer records in a single workflow.
