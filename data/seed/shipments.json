@@ -1,0 +1,41 @@
+[
+  {
+    "shipment_id": "SHP-1001",
+    "booking_id": "BKG-2001",
+    "customer_id": "CUS-3001",
+    "status": "IN_TRANSIT",
+    "origin": "Kochi",
+    "destination": "Dubai",
+    "carrier": "Ashwin Logistics",
+    "pickup_date": "2026-10-01",
+    "estimated_delivery": "2026-10-05",
+    "last_update": "Shipment departed Kochi facility",
+    "updated_at": "2026-10-01T08:30:00"
+  },
+  {
+    "shipment_id": "SHP-1002",
+    "booking_id": "BKG-2002",
+    "customer_id": "CUS-3002",
+    "status": "OUT_FOR_DELIVERY",
+    "origin": "Bangalore",
+    "destination": "Chennai",
+    "carrier": "Ashwin Logistics",
+    "pickup_date": "2026-09-29",
+    "estimated_delivery": "2026-10-01",
+    "last_update": "Shipment is out for delivery",
+    "updated_at": "2026-10-01T09:15:00"
+  },
+  {
+    "shipment_id": "SHP-1003",
+    "booking_id": "BKG-2003",
+    "customer_id": "CUS-3003",
+    "status": "CUSTOMS_HOLD",
+    "origin": "Mumbai",
+    "destination": "Dubai",
+    "carrier": "Ashwin Logistics",
+    "pickup_date": "2026-09-28",
+    "estimated_delivery": "2026-10-04",
+    "last_update": "Awaiting customs documentation",
+    "updated_at": "2026-10-01T07:45:00"
+  }
+]

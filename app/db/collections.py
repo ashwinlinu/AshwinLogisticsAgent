@@ -1,0 +1,4 @@
+SHIPMENTS_COLLECTION = "shipments"
+BOOKINGS_COLLECTION = "bookings"
+CUSTOMERS_COLLECTION = "customers"
+CLAIMS_COLLECTION = "claims"

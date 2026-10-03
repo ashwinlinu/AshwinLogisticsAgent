@@ -10,7 +10,7 @@ async def main():
         {
             "messages": [
                 HumanMessage(
-                    content="What is the current status of shipment SHP-1001?"
+                    content="what is the policy of canceling a shipment?"
                 )
             ]
         }

@@ -12,10 +12,14 @@ class Settings(BaseSettings):
     qdrant_url: str = "http://localhost:6333"
     qdrant_collection: str = "ashwin_logistics_knowledge"
 
+    mongodb_uri: str
+    mongodb_database: str
+    
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
     )
+    
 
 settings = Settings()
