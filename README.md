@@ -93,6 +93,14 @@ Logistics_agent/
 python main.py
 ```
 
+## Authentication and customer onboarding
+
+Protected API routes use opaque bearer tokens backed by MongoDB sessions. Register an operator account with `POST /auth/register` (passwords must be at least 12 characters), or log in with `POST /auth/login`. Send the returned token as `Authorization: Bearer <token>`. `POST /auth/logout` revokes the current session; sessions expire after 12 hours and can be extended with `POST /sessions/refresh`. Conversations are bound to both their owner and the authenticated session, so separate logins do not share conversational history.
+
+The seeded local admin account uses `ashwin@ashwinlogistics.com`. Set `SEED_OWNER_PASSWORD` (at least 12 characters) before running `python -m scripts.seed_mongodb`; the seed script stores only a password hash and adds owner IDs to customers, bookings, and shipments. Customer, booking, shipment, and conversation queries are scoped to the authenticated user's `user_id`. Public registration creates operator accounts; the local seeded account is the admin. Account, session, conversation, and operational writes create audit records. Registration and login are throttled to 10 requests per source IP per minute per app process.
+
+Customer onboarding uses `POST /customers`; bookings are created with `POST /bookings` referencing an owned `customer_id`, and shipments with `POST /shipments` referencing an owned `booking_id`. List and detail routes are also owner scoped.
+
 ## Current Status
 This is a project foundation and architecture specification for an enterprise AI support agent. The next phase typically includes:
 

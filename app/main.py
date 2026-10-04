@@ -9,6 +9,10 @@ from app.api.models import ErrorResponse
 from app.api.routes import router
 from app.config.settings import settings
 from app.core.logging import configure_logging
+from app.db.repositories.auth_repository import auth_repository
+from app.db.repositories.operations_repository import operations_repository
+from app.db.repositories.audit_repository import ensure_audit_indexes
+from app.db.repositories.conversation_repository import conversation_repository
 
 logger = logging.getLogger("app.main")
 
@@ -20,6 +24,14 @@ app = FastAPI(
 )
 
 app.include_router(router)
+
+
+@app.on_event("startup")
+async def initialize_database_indexes():
+    await auth_repository.ensure_indexes()
+    await operations_repository.ensure_indexes()
+    await ensure_audit_indexes()
+    await conversation_repository.ensure_indexes()
 
 
 @app.middleware("http")

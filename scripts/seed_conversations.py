@@ -4,7 +4,7 @@ from app.db.repositories.conversation_repository import conversation_repository
 
 
 async def main():
-    user_id = "ashwinlinu"
+    user_id = "USR-1001"
     await conversation_repository.collection.delete_many({"user_id": user_id})
 
     conv = await conversation_repository.create_conversation(user_id=user_id)

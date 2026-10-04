@@ -1,6 +1,7 @@
 [
   {
     "shipment_id": "SHP-1001",
+    "user_id": "USR-1001",
     "booking_id": "BKG-2001",
     "customer_id": "CUS-3001",
     "status": "IN_TRANSIT",
@@ -14,6 +15,7 @@
   },
   {
     "shipment_id": "SHP-1002",
+    "user_id": "USR-1001",
     "booking_id": "BKG-2002",
     "customer_id": "CUS-3002",
     "status": "OUT_FOR_DELIVERY",
@@ -27,6 +29,7 @@
   },
   {
     "shipment_id": "SHP-1003",
+    "user_id": "USR-1001",
     "booking_id": "BKG-2003",
     "customer_id": "CUS-3003",
     "status": "CUSTOMS_HOLD",

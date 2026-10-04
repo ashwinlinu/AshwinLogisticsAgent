@@ -6,6 +6,7 @@ from app.ai.client import token_provider
 
 from app.tools.shipment_tools import get_shipment_status
 from app.tools.rag_tools import search_internal_knowledge
+from app.tools.customer_tools import find_customer, get_customer_shipments
 
 
 SYSTEM_PROMPT = """
@@ -28,6 +29,8 @@ Use this tool when the user asks about:
 - shipment tracking
 - shipment delivery status
 - shipment ETA
+- customer name, email, or company lookup
+- shipments associated with a customer
 
 Example:
 
@@ -79,6 +82,8 @@ llm_with_tools = llm.bind_tools(
     [
         get_shipment_status,
         search_internal_knowledge,
+        find_customer,
+        get_customer_shipments,
     ]
 )
 

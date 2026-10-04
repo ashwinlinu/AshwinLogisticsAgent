@@ -15,14 +15,16 @@ class ShipmentRepository:
     async def get_shipment(
         self,
         shipment_id: str,
+        user_id: str | None = None,
     ) -> Optional[dict]:
 
         shipment_id = shipment_id.strip().upper()
 
+        query = {"shipment_id": shipment_id}
+        if user_id is not None:
+            query["user_id"] = user_id
         shipment = await self._get_collection().find_one(
-            {
-                "shipment_id": shipment_id
-            },
+            query,
             {
                 "_id": 0
             },

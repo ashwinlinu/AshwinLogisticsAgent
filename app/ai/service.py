@@ -16,24 +16,25 @@ class AIService:
         conversation_id: str | None = None,
         session_id: str | None = None,
         user_id: str | None = None,
+        auth_session_id: str | None = None,
     ) -> tuple[str, str]:
         try:
             resolved_user_id = resolve_user_id(user_id)
 
             if session_id:
-                conversation = await conversation_repository.get_session(session_id)
+                conversation = await conversation_repository.get_session(session_id, user_id=resolved_user_id)
                 if conversation is None:
-                    conversation = await conversation_repository.create_conversation(user_id=resolved_user_id, session_id=session_id)
+                    conversation = await conversation_repository.create_conversation(user_id=resolved_user_id, session_id=session_id, auth_session_id=auth_session_id)
                 conversation_id = conversation.conversation_id
             elif conversation_id:
-                conversation = await conversation_repository.get_conversation(conversation_id)
+                conversation = await conversation_repository.get_conversation(conversation_id, user_id=resolved_user_id)
                 if conversation is None:
-                    conversation = await conversation_repository.create_conversation(user_id=resolved_user_id, session_id=session_id)
+                    conversation = await conversation_repository.create_conversation(user_id=resolved_user_id, session_id=session_id, auth_session_id=auth_session_id)
                 conversation_id = conversation.conversation_id
             else:
-                conversation = await conversation_repository.get_latest_session_for_user(resolved_user_id)
+                conversation = await conversation_repository.get_latest_conversation_for_auth_session(resolved_user_id, auth_session_id) if auth_session_id else None
                 if conversation is None:
-                    conversation = await conversation_repository.create_conversation(user_id=resolved_user_id, session_id=session_id)
+                    conversation = await conversation_repository.create_conversation(user_id=resolved_user_id, session_id=session_id, auth_session_id=auth_session_id)
                 conversation_id = conversation.conversation_id
 
             session_id = conversation.session_id
@@ -49,15 +50,15 @@ class AIService:
 
             state_messages.append(HumanMessage(content=message))
 
-            result = await graph.ainvoke({"messages": state_messages})
+            result = await graph.ainvoke({"messages": state_messages}, config={"configurable": {"user_id": resolved_user_id}})
             messages = result.get("messages", [])
             if not messages:
                 response_text = "I’m not able to answer that right now. Please try again."
             else:
                 response_text = messages[-1].content
 
-            await conversation_repository.append_message(conversation_id, "user", message)
-            await conversation_repository.append_message(conversation_id, "assistant", response_text)
+            await conversation_repository.append_message(conversation_id, "user", message, user_id=resolved_user_id)
+            await conversation_repository.append_message(conversation_id, "assistant", response_text, user_id=resolved_user_id)
 
             return response_text, conversation_id
 

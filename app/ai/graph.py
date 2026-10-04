@@ -12,6 +12,7 @@ from app.ai.nodes.agent import agent_node
 from app.tools.shipment_tools import get_shipment_status
 from app.tools.rag_tools import search_internal_knowledge
 from app.ai.routing import route_after_agent
+from app.tools.customer_tools import find_customer, get_customer_shipments
 
 
 def build_graph():
@@ -29,6 +30,8 @@ def build_graph():
         ToolNode(
             [
                 get_shipment_status,
+                find_customer,
+                get_customer_shipments,
                 search_internal_knowledge,
             ]
         ),
@@ -51,8 +54,7 @@ def build_graph():
         "agent",
         route_after_agent,
         {
-            "shipment_tool": "tools",
-            "rag": "tools",
+            "tools": "tools",
             "end": END,
         },
     )

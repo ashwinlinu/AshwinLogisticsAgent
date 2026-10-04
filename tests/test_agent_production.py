@@ -21,7 +21,7 @@ def test_shipment_intent_routes_to_shipment_tool():
         ]
     }
 
-    assert route_after_agent(state) == "shipment_tool"
+    assert route_after_agent(state) == "tools"
 
 
 def test_rag_intent_routes_to_rag_tool():
@@ -36,7 +36,7 @@ def test_rag_intent_routes_to_rag_tool():
         ]
     }
 
-    assert route_after_agent(state) == "rag"
+    assert route_after_agent(state) == "tools"
 
 
 def test_conversational_message_does_not_route_to_tool():
@@ -64,6 +64,7 @@ def test_rag_tool_handles_blank_query():
     assert result["status"] == "invalid_input"
 
 
-def test_rag_tool_returns_no_results_fallback():
+def test_rag_tool_returns_no_results_fallback(monkeypatch):
+    monkeypatch.setattr("app.tools.rag_tools.retrieve", lambda query, top_k: [])
     result = asyncio.run(search_internal_knowledge.ainvoke({"query": "nonexistent logistics claim answer"}))
-    assert result["status"] in {"no_results", "error", "ok"}
+    assert result["status"] == "no_results"

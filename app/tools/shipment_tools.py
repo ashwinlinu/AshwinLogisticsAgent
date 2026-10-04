@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 
 from langchain_core.tools import tool
+from langchain_core.runnables import RunnableConfig
 
 from app.db.repositories.shipment_repository import shipment_repository
 
@@ -21,7 +22,7 @@ def _normalize_shipment_id(shipment_id: str | None) -> str | None:
 
 
 @tool
-async def get_shipment_status(shipment_id: str) -> dict:
+async def get_shipment_status(shipment_id: str, config: RunnableConfig) -> dict:
     """
     Retrieve the current operational status and details of a shipment.
 
@@ -48,7 +49,11 @@ async def get_shipment_status(shipment_id: str) -> dict:
                 "shipment_id": normalized_id,
             }
 
-        shipment = await shipment_repository.get_shipment(normalized_id)
+        user_id = (config.get("configurable") or {}).get("user_id")
+        if not user_id:
+            return {"status": "unauthorized", "message": "An authenticated owner is required to look up shipments."}
+
+        shipment = await shipment_repository.get_shipment(normalized_id, user_id=user_id)
 
         if shipment is None:
             return {
